@@ -2,8 +2,10 @@
 import { useSession } from "next-auth/react";
 import React from "react";
 
-export default function page() {
+export default function Page() {
   const { data: session } = useSession();
+  console.log("hey from client");
+
   if (!session || !session.user)
     return (
       <div className="text-red-500 p-5">
