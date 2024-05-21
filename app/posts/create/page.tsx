@@ -7,7 +7,13 @@ export default function PostsCreate() {
       <div className="mb-32 text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
         <PostForm
           formAction={createPost}
-          initialData={{ title: "", content: "" }}
+          initialData={{
+            title: "",
+            content: "",
+            image: "",
+            fileId: "",
+            imageOld: "",
+          }}
         />
       </div>
     </main>
