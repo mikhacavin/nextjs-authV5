@@ -29,6 +29,9 @@ export default async function PostsEdit({ params }: PostsEditProps) {
           initialData={{
             title: post?.title ?? "",
             content: post?.content ?? "",
+            imageOld: post?.image ?? "",
+            image: "",
+            fileId: post?.fileId ?? "",
           }}
         />
       </div>

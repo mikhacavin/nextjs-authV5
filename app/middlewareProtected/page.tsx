@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { fetchPosts } from "../db/queries/posts";
 import PostDelete from "../components/post-delete";
+import Image from "next/image";
 
 export default async function Home() {
   const posts = await fetchPosts(); // Fetching the posts from the database.
@@ -41,6 +42,17 @@ export default async function Home() {
                   </h2>
                 </Link>
                 <p className={`m-0 max-w-[30ch] text-sm opacity-60`}>
+                  <Image
+                    src={post.image?.toString()}
+                    width="0"
+                    height="0"
+                    sizes="100vw"
+                    className="w-full h-auto"
+                    alt={post.title}
+                    priority={true}
+                  />
+                </p>
+                <p className={`m-0 max-w-[30ch] text-sm opacity-60`}>
                   {post.content}
                 </p>
               </div>
@@ -48,7 +60,7 @@ export default async function Home() {
                 {"Updated at " +
                   post.updatedAt.toLocaleDateString("id-ID", dateOptions)}
               </div>
-              <PostDelete id={post.id} />
+              <PostDelete id={post.id} fileId={post.fileId} />
             </div>
           );
         })}

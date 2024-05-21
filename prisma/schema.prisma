@@ -18,6 +18,8 @@ model Post {
   id        String   @id @default(cuid())
   title     String // will generate VARCHAR
   content   String // will generate TEXT
+  image     String // will generate
+  fileId    String // will generate
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

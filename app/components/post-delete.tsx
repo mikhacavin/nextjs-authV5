@@ -7,14 +7,15 @@ import { deletePost } from "@/app/actions/posts";
 // Define the props that the PostDelete component expects.
 interface PostDeleteProps {
   id: string; // The ID of the post to delete.
+  fileId: string; // The ID of the file to delete
 }
 
-export default function PostDelete({ id }: PostDeleteProps) {
+export default function PostDelete({ id, fileId }: PostDeleteProps) {
   // Define the action to perform when the form is submitted.
   // This is how we do it if we omit the bind from the server action
   const deleteAction = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault(); // Prevent the form from being submitted in the traditional way.
-    deletePost(id); // Delete the post with the given ID.
+    deletePost(id, fileId); // Delete the post with the given ID.
   };
 
   // Render a form with a single submit button. When the button is clicked, the form is submitted

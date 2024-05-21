@@ -12,6 +12,17 @@ import { redirect } from "next/navigation";
 // Import the Zod library for validation
 import { z } from "zod";
 import { db } from "../db";
+import { DeleteFile, uploadImage } from "./imageUpload";
+import ImageKit from "imagekit";
+
+const MAX_FILE_SIZE = 1024 * 1024 * 20;
+const ACCEPTED_IMAGE_MIME_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
+const ACCEPTED_IMAGE_TYPES = ["jpeg", "jpg", "png", "webp"];
 
 // Define a schema for the post using Zod
 const postSchema = z.object({
@@ -19,6 +30,7 @@ const postSchema = z.object({
   title: z.string().min(3).max(255),
   // the content must be a string between 10 and 4000 characters
   content: z.string().min(10).max(4000),
+  image: z.any(),
 });
 
 // Define an interface for the form state
@@ -26,9 +38,16 @@ interface PostFormState {
   errors: {
     title?: string[];
     content?: string[];
+    image?: string[];
     _form?: string[];
   };
 }
+
+const imageKit = new ImageKit({
+  publicKey: process.env.IMAGEKIT_PUBLIC_KEY!,
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY!,
+  urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT!,
+});
 
 // Define an asynchronous function to create a post
 export async function createPost(
@@ -43,6 +62,7 @@ export async function createPost(
   const result = postSchema.safeParse({
     title: formData.get("title"),
     content: formData.get("content"),
+    image: formData.get("image"),
   });
 
   // If validation fails, return the errors
@@ -56,11 +76,23 @@ export async function createPost(
 
   let post: Post;
   try {
+    const response = await uploadImage(formData);
+
+    if (!response.url) {
+      return {
+        errors: {
+          _form: ["Something went wrong"],
+        },
+      };
+    }
+
     // If validation passes, create a new post in the database
     post = await db.post.create({
       data: {
         title: result.data.title,
         content: result.data.content,
+        image: response.url,
+        fileId: response.fileId,
       },
     });
   } catch (error: unknown) {
@@ -81,7 +113,7 @@ export async function createPost(
   }
 
   // Revalidate the path and redirect to the home page
-  revalidatePath("/");
+  revalidatePath("/middlewareProtected");
   redirect("/middlewareProtected");
 }
 
@@ -90,39 +122,93 @@ export async function updatePost(
   formState: PostFormState,
   formData: FormData
 ): Promise<PostFormState> {
-  const result = postSchema.safeParse({
-    title: formData.get("title"),
-    content: formData.get("content"),
-  });
-
-  if (!result.success) {
-    return {
-      errors: result.error.flatten().fieldErrors,
-    };
-  }
-
-  let post: Post;
-  try {
-    post = await db.post.update({
-      where: { id },
-      data: {
-        title: result.data.title,
-        content: result.data.content,
-      },
+  const image = formData.get("image") as unknown as File;
+  if (image.size > 0) {
+    const result = postSchema.safeParse({
+      title: formData.get("title"),
+      content: formData.get("content"),
+      image: formData.get("image"),
     });
-  } catch (error: unknown) {
-    if (error instanceof Error) {
+    if (!result.success) {
       return {
-        errors: {
-          _form: [error.message],
-        },
+        errors: result.error.flatten().fieldErrors,
       };
-    } else {
+    }
+
+    let post: Post;
+
+    try {
+      const response = await uploadImage(formData);
+      const deleteOldImage = await DeleteFile(formData.get("fileId") as string);
+      if (!response.url) {
+        return {
+          errors: {
+            _form: ["Something went wrong"],
+          },
+        };
+      }
+
+      post = await db.post.update({
+        where: { id },
+        data: {
+          title: result.data.title,
+          content: result.data.content,
+          image: response.url,
+          fileId: response.fileId,
+        },
+      });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return {
+          errors: {
+            _form: [error.message],
+          },
+        };
+      } else {
+        return {
+          errors: {
+            _form: ["Something went wrong"],
+          },
+        };
+      }
+    }
+  } else {
+    console.log("masuk data tanpa update image");
+    const result = postSchema.safeParse({
+      title: formData.get("title"),
+      content: formData.get("content"),
+    });
+
+    if (!result.success) {
       return {
-        errors: {
-          _form: ["Something went wrong"],
-        },
+        errors: result.error.flatten().fieldErrors,
       };
+    }
+
+    let post: Post;
+
+    try {
+      post = await db.post.update({
+        where: { id },
+        data: {
+          title: result.data.title,
+          content: result.data.content,
+        },
+      });
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return {
+          errors: {
+            _form: [error.message],
+          },
+        };
+      } else {
+        return {
+          errors: {
+            _form: ["Something went wrong"],
+          },
+        };
+      }
     }
   }
 
@@ -130,9 +216,13 @@ export async function updatePost(
   redirect("/middlewareProtected");
 }
 
-export async function deletePost(id: string): Promise<PostFormState> {
+export async function deletePost(
+  id: string,
+  fileId: string
+): Promise<PostFormState> {
   let post: Post;
   try {
+    await DeleteFile(fileId as string);
     post = await db.post.delete({
       where: { id },
     });

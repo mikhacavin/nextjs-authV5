@@ -1,6 +1,7 @@
 // this is a client component
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useFormState } from "react-dom";
 
@@ -8,6 +9,7 @@ import { useFormState } from "react-dom";
 interface FormErrors {
   title?: string[];
   content?: string[];
+  image?: string[];
 }
 
 // Define the shape of the form state
@@ -22,6 +24,9 @@ interface PostFormProps {
     // The initial data for the form fields
     title: string;
     content: string;
+    image: string;
+    imageOld: string;
+    fileId: string;
   };
 }
 
@@ -74,6 +79,48 @@ export default function PostForm({ formAction, initialData }: PostFormProps) {
               </div>
             )}
           </div>
+          <div className="mb-4">
+            {initialData.imageOld ? (
+              <div>
+                <p className={`m-0 max-w-[30ch] text-sm opacity-60`}>
+                  <Image
+                    src={initialData.imageOld.toString()}
+                    width="0"
+                    height="0"
+                    sizes="100vw"
+                    className="w-full h-auto"
+                    alt={initialData.title}
+                    priority={true}
+                  />
+                </p>
+                <label htmlFor="image" className="block mb-2">
+                  <p>Change Image?</p>
+                </label>
+              </div>
+            ) : (
+              <label htmlFor="image" className="block mb-2">
+                <p>Image</p>
+              </label>
+            )}
+
+            <input
+              type="file"
+              id="image"
+              name="image"
+              className="rounded p-2 w-full text-white"
+            />
+            {formState.errors.image && (
+              <div className="text-red-500">
+                {formState.errors.image?.join(", ")}
+              </div>
+            )}
+          </div>
+          <input
+            type="hidden"
+            id="fileId"
+            name="fileId"
+            defaultValue={initialData.fileId}
+          />
           <div className="mb-4">
             <button
               type="submit"

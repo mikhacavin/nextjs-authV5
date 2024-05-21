@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { fetchPosts } from "./db/queries/posts";
 import PostDelete from "./components/post-delete";
+import Image from "next/image";
 
 export default async function Home() {
   const posts = await fetchPosts(); // Fetching the posts from the database.
@@ -23,6 +24,17 @@ export default async function Home() {
           return (
             <div key={post.id}>
               <div className="mb-4">
+                <p className={`m-0 max-w-[30ch] text-sm opacity-60`}>
+                  <Image
+                    src={post.image?.toString()}
+                    width="0"
+                    height="0"
+                    sizes="100vw"
+                    className="w-full h-auto"
+                    alt={post.title}
+                    priority={true}
+                  />
+                </p>
                 <Link key={post.id} href={`/posts/${post.id}`} className="">
                   <h2 className={`mb-3 text-2xl font-semibold`}>
                     {post.title}
@@ -40,6 +52,9 @@ export default async function Home() {
           );
         })}
       </div>
+      <p className="text-center mt-5">
+        Build with : NextJS Server Action + Prisma & PostgreSQL + ImageKit{" "}
+      </p>
     </main>
   );
 }
