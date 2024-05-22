@@ -1,6 +1,7 @@
 import { auth, signIn, signOut } from "@/auth";
 import Link from "next/link";
 import React from "react";
+import { SignIn } from "./components/signin-button";
 
 export default async function Appbar() {
   const session = await auth();
@@ -24,14 +25,7 @@ export default async function Appbar() {
             </form>
           </div>
         ) : (
-          <form
-            action={async () => {
-              "use server";
-              await signIn();
-            }}
-          >
-            <button type="submit">Sign In</button>
-          </form>
+          <SignIn />
         )}
       </div>
     </div>
