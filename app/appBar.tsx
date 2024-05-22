@@ -2,6 +2,7 @@ import { auth, signIn, signOut } from "@/auth";
 import Link from "next/link";
 import React from "react";
 import { SignIn } from "./components/signin-button";
+import { SignOut } from "./components/signout-button";
 
 export default async function Appbar() {
   const session = await auth();
@@ -15,14 +16,7 @@ export default async function Appbar() {
         {session && session.user ? (
           <div className="flex gap-2">
             <p>{session.user.name}</p>
-            <form
-              action={async () => {
-                "use server";
-                await signOut();
-              }}
-            >
-              <button type="submit">Sign Out</button>
-            </form>
+            <SignOut />
           </div>
         ) : (
           <SignIn />
